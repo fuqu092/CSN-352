@@ -1,4 +1,4 @@
-struct Kunal{
+struct Random{
     int a;
     int b;
     char c;

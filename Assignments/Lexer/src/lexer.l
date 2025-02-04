@@ -20,6 +20,7 @@ CP  (u|U|L)
 SP  (u8|u|U|L)
 ES  (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 WS  [ \t\v\n\f]
+WSS [ \t\v\f]
 
 %{
 #include <stdio.h>
@@ -108,14 +109,14 @@ static int check_type(void);
 #define TYPEDEF_NAME 72
 #define ENUMERATION_CONSTANT 73
 
-void yyerror(const char *msg) {
-    fprintf(stderr, "Error: %s\n", msg);
-}
+void yyerror(const char *msg) ;
 int counter = 0;
 void print_token(const char* token_name, const char* lexeme);
 #define MAX_ERRORS 1000
 char *error_list[MAX_ERRORS];
 int error_count = 0;
+int error_lines[MAX_ERRORS];
+int line_number = 1;
 
 void store_error(const char *lexeme);
 
@@ -125,6 +126,8 @@ void print_errors() ;
 
 
 %%
+
+\n                {line_number++;}
 "/*"                                    { comment(); }
 "//".*                                    { /* consume //-comment */ }
 
@@ -237,7 +240,7 @@ void print_errors() ;
 "|"					{ print_token("T_|", yytext); return '|'; }
 "?"					{ print_token("T_?", yytext); return '?'; }
 
-{WS}+					{ /* whitespace separates tokens */ }
+{WSS}+					{ /* whitespace separates tokens */ }
 .					{ store_error(yytext); /* discard bad characters */ }
 
 %%
@@ -298,6 +301,7 @@ void print_token(const char* token_name, const char* lexeme) {
 void store_error(const char *lexeme) {
     if (error_count < MAX_ERRORS) {
         error_list[error_count] = strdup(lexeme);
+        error_lines[error_count] = line_number;
         error_count++;
     }
 }
@@ -307,9 +311,16 @@ void print_errors() {
         printf("\nLexical Errors:\n");
         printf("---------------------------\n");
         for (int i = 0; i < error_count; i++) {
-            printf("Error: Unrecognized token '%s'\n", error_list[i]);
+            printf("Error: Unrecognized token '%s' at line %d\n", error_list[i], error_lines[i]);
             free(error_list[i]);
         }
         printf("---------------------------\n");
     }
+}
+void yyerror(const char *msg) {
+    printf("\nLexical Errors:\n");
+    printf("---------------------------\n");
+    fprintf(stderr, "Error: %s at line %d\n", msg, line_number);
+    printf("---------------------------\n");
+    counter=0;
 }

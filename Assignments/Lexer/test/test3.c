@@ -10,6 +10,7 @@ void compiler(){
 
 
 int main(){
-    char* buffer[100] = "We will create struct and fuction in this";
+    char* buffer[100] = "We will create struct\
+                         and fuction in this";
     return 0;
 }

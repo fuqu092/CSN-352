@@ -1,5 +1,5 @@
 int main(){
-    char* buffer[100] = "We will learn binary search in this";
+    char* buffer[100] = "Let's learn binary search";
     int s = 0;
     int e = 100;
     while(s <= e){

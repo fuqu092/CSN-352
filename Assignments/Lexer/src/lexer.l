@@ -191,7 +191,11 @@ void print_errors() ;
 {HP}{H}*"."{H}+{P}{FS}?			{ print_token("F_CONSTANT", yytext); return F_CONSTANT; }
 {HP}{H}+"."{P}{FS}?			{ print_token("F_CONSTANT", yytext); return F_CONSTANT; }
 
-({SP}?\"([^"\\\n]|{ES})*\"{WS}*)+	{ print_token("STRING_LITERAL", yytext);return STRING_LITERAL; }
+\"(\\(.|\n)|[^\\"\n])*\" { print_token("STRING_LITERAL", yytext);return STRING_LITERAL; }
+\"(\\(.|\n)|[^\\"\n])*    {store_error("Unterminated String Literal");}
+
+
+
 
 "..."					{ print_token("ELLIPSIS", yytext); return ELLIPSIS; }
 ">>="					{ print_token("RIGHT_ASSIGN", yytext); return RIGHT_ASSIGN; }
@@ -241,7 +245,7 @@ void print_errors() ;
 "?"					{ print_token("T_?", yytext); return '?'; }
 
 {WSS}+					{ /* whitespace separates tokens */ }
-.					{ store_error(yytext); /* discard bad characters */ }
+.					{ char error_msg[256]; snprintf(error_msg, sizeof(error_msg), "Unrecognized Token %s", yytext); store_error(error_msg); /* discard bad characters */ }
 
 %%
 
@@ -270,7 +274,9 @@ static void comment(void)
             if (c == 0)
                 break;
         }
-    yyerror("unterminated comment");
+
+    store_error("Unterminated Comment");
+    counter=0;
 }
 
 static int check_type(void)
@@ -311,8 +317,7 @@ void print_errors() {
         printf("\nLexical Errors:\n");
         printf("---------------------------\n");
         for (int i = 0; i < error_count; i++) {
-            printf("Error: Unrecognized token '%s' at line %d\n", error_list[i], error_lines[i]);
-            free(error_list[i]);
+            printf("Error: %s at line %d\n", error_list[i], error_lines[i]);
         }
         printf("---------------------------\n");
     }

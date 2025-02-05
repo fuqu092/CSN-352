@@ -2,6 +2,11 @@ int main(){
     char* buffer[100] = "Let's learn binary search";
     int s = 0;
     int e = 100;
+    // Greetings
+    /*
+        Binary search
+        is easy
+    */
     while(s <= e){
         int mid = (s + e)/2;
         if(mid == 10){

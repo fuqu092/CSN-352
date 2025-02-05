@@ -117,7 +117,7 @@ char *error_list[MAX_ERRORS];
 int error_count = 0;
 int error_lines[MAX_ERRORS];
 int line_number = 1;
-
+static int in_comment = 0;
 void store_error(const char *lexeme);
 
 void print_errors() ;
@@ -128,7 +128,7 @@ void print_errors() ;
 %%
 
 \n                {line_number++;}
-"/*"                                    { comment(); }
+"/*"                                    { in_comment = 1; comment(); }
 "//".*                                    { /* consume //-comment */ }
 
 "auto"					{ print_token("AUTO", yytext); return(AUTO); }
@@ -254,7 +254,7 @@ int yywrap(void)        /* called at end of input */
     if (counter > 0) {
         printf("|------------|--------------------------------|--------------------------------|\n");
     }
-    if (error_count > 0) print_errors();
+    if (!in_comment && error_count > 0) print_errors();
     return 1;           /* terminate now */
 }
 
@@ -268,8 +268,10 @@ static void comment(void)
             while ((c = input()) == '*')
                 ;
 
-            if (c == '/')
+            if (c == '/'){
+                in_comment = 0;
                 return;
+            }
 
             if (c == 0)
                 break;
@@ -277,6 +279,7 @@ static void comment(void)
 
     store_error("Unterminated Comment");
     counter=0;
+    in_comment = 0;
 }
 
 static int check_type(void)
